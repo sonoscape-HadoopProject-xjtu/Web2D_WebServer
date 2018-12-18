@@ -126,6 +126,41 @@ app.post('/api/user/signup', function (req, res) {
 
   })
 })
+// 用户表单获取
+app.get('/api/userlist', function (req, res) {
+  console.log(req.query)
+  var response = {}
+  userModel.find(function (err,res) {
+    if(err)
+      return
+    else {
+      response.data = res
+    }
+  })
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.end(JSON.stringify(response))
+})
+// dicom表单获取
+app.get('/api/users', function (req, res) {
+  console.log(req.query)
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  var response = {
+    link: {
+
+    },
+    data: {
+      name: 'name',
+      email: 'email',
+      birthdate: 'birthdate',
+      address: {
+        line1: 'line1',
+        line2: 'line2',
+        zipcode: 'zipcode'
+      }
+    }
+  }
+  res.end(JSON.stringify(response))
+})
 // 监听端口，启动程序
 app.listen(config.port, function () {
   console.log(`listening on port ${config.port}`)

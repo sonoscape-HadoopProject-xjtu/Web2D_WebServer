@@ -3,17 +3,17 @@ const userModel = require('./models/user')
 const authCodeModel = require('./models/authorization_code')
 
 
-userModel.create({
-    userid: 'vrz',
-    userpassword: '123',
-    usergroup: 'administrator'
-}, function (err, res) {
-    if (err) {
-        console.log(err)
-    } else {
-        console.log(res)
-    }
-})
+// userModel.create({
+//     userid: 'vrz',
+//     userpassword: '123',
+//     usergroup: 'administrator'
+// }, function (err, res) {
+//     if (err) {
+//         console.log(err)
+//     } else {
+//         console.log(res)
+//     }
+// })
 userModel.find(function (err, res) {
     if (err) {
         console.log(err)
@@ -21,10 +21,10 @@ userModel.find(function (err, res) {
         console.log(res)
     }
 })
-authCodeModel.create({
-    authorization_code: '769704987'
-}, function (err) {
-    if (err) {
-        console.log(err)
-    }    
-})
+// authCodeModel.create({
+//     authorization_code: '769704987'
+// }, function (err) {
+//     if (err) {
+//         console.log(err)
+//     }    
+// })

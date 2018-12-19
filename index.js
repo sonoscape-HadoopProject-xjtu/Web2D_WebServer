@@ -84,7 +84,7 @@ app.post('/api/user/signup', function (req, res) {
             if (err) {
               res.status(500)
             } else {
-              if (userinfo) {
+              if (userinfo.length !== 0) {
                 res.send({
                   status: 0,
                   message: '用户名已存在'
@@ -128,17 +128,19 @@ app.post('/api/user/signup', function (req, res) {
 })
 // 用户表单获取
 app.get('/api/userlist', function (req, res) {
-  console.log(req.query)
-  var response = {}
-  userModel.find(function (err,res) {
+  // console.log(req.query)
+  var response = {
+    data: {}
+  }
+  userModel.find(function (err,users) {
     if(err)
-      return
+      res.status(500)
     else {
-      response.data = res
+      response = users
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.end(JSON.stringify(response))
     }
-  })
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.end(JSON.stringify(response))
+  })  
 })
 // dicom表单获取
 app.get('/api/users', function (req, res) {

@@ -2,8 +2,8 @@ const hbase = require("hbase-rpc-client")
 const config = require("config-lite")(__dirname)
 const should = require("should")
 client = hbase({
-    zookeeperHosts: [config.hbase_remote],
-    zookeeperRoot: "/hbase",
+    zookeeperHosts: ["master.msopopop.cn:2181"],
+    zookeeperRoot: "/hbase-1.0.0",
     zookeeperReconnectTimeout: 20000,
     rootRegionZKPath: "/meta-region-server",
     rpcTimeout: 30000,
@@ -16,11 +16,8 @@ client = hbase({
 client.on("error", function (err) {
     console.log("hbase client error:", err)
 })
-client.getScanner('2018-12-15', function (err, scanner) {
-    scanner.next(numOfRows, )
-})
 
-client.getScanner('2018-12-15', function (err, scanner) {
+client.getScanner('numOfRows', function (err, scanner) {
     var index = 0;
     var next = function (numberOfRows) {
         scanner.next(numberOfRows, function (err, rows) {

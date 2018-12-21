@@ -12,14 +12,35 @@ const querystring = require('querystring')
 const app = express()
 
 const hbaseClient = hbase(config.hbase)
+// 设置头，解决跨域问题
+app.use(function (req, res, next) {
 
+  // Website you wish to allow to connect
+  res.setHeader('Access-Control-Allow-Origin', '*');
+
+  // Request methods you wish to allow
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+
+  // Request headers you wish to allow
+  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+
+  // Set to true if you need the website to include cookies in the requests sent
+  // to the API (e.g. in case you use sessions)
+  res.setHeader('Access-Control-Allow-Credentials', true);
+
+  // Pass to next layer of middleware
+  next();
+});
 // 登录
 app.post('/api/user/login', function (req, res) {
+  console.log('1')
   var body = ''
   req.on('data', function (chunk) {
     body += chunk
   })
   req.on('end', function () {
+    // res.setHeader("Access-Control-Allow-Origin", "*");
+
     // 解析参数
     body = JSON.parse(body)
     console.log(body.userid)
@@ -32,6 +53,7 @@ app.post('/api/user/login', function (req, res) {
         res.status(500)
       } else {
         if (userinfo) {
+
           res.send({
             status: 1,
             message: '登录成功',
@@ -116,8 +138,7 @@ app.get('/api/userlist', function (req, res) {
   userModel.find(function (err, users) {
     if (err)
       res.status(500)
-    else {
-      res.setHeader("Access-Control-Allow-Origin", "*");
+    else {      
       res.end(JSON.stringify(users))
     }
   })
@@ -145,8 +166,7 @@ app.get('/api/studylist', function (req, res) {
         dicom[chunk.column.split(':')[1]] = chunk.$
         dicomlist.push(dicom)
       }
-    })
-    res.setHeader("Access-Control-Allow-Origin", "*");
+    })    
     res.end(JSON.stringify(dicomlist))
   })
 })

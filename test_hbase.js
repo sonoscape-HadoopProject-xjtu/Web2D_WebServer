@@ -2,54 +2,11 @@ const hbase = require('hbase')
 const config = require("config-lite")(__dirname)
 var assert = require('assert');
 // Instantiate a new client
-client = hbase(config.hbase)
-assert.ok(client.connection instanceof hbase.Connection)
-// Create a table
-// client
-//     .table('2018-12-15')
-//     .create('my_column_family', function (err, success) {
-//         if (err) {
-//             console.log(err)
-//             return
-//         }
-//         // Insert a record
-//         client
-//             .table('my_table')
-//             .row('my_row')
-//             .put('my_column_family:my_column', 'my value', function (err, success) {
-//                 if (err) {
-//                     console.log('2')
-//                     return
-//                 }
-//                 // // Read a record
-//                 // client
-//                 //     .table('my_table')
-//                 //     .row('my_row')
-//                 //     .get('my_column_family', function (err, [cell]) {
-//                 //         // Validate the result
-//                 //         assert(cell.key, 'my_row')
-//                 //         assert(cell.column, 'my_column_family:my_column')
-//                 //         assert(cell.$, 'my value')
-//                 //     })
-//             })
-//     })
-// Read a record
-// client
-//     .table('2018-12-15')
-//     .row()
-//     .get('Patient', function (err, [cell]) {
-//         if (err) {
-//             console.log('3')
-//             return
-//         }
-//         console.log(cell)
-//         // Validate the result
-//         // assert(cell.key, 'my_row')
-//         // assert(cell.column, 'my_column_family:my_column')
-//         // assert(cell.$, 'my value')
-//     })
-client.table('2018-12-15').scan({
-    startRow: "1.3.12.2.1107.5.2.32.35162.30000012020622041507900000157",
+var client = hbase({
+    host: '106.14.188.106',
+    port: 8080
+});
+client.table('DicomAttr').scan({
     maxVersions: 1
 }, function (err, rows) {
     if (err) {
@@ -58,3 +15,62 @@ client.table('2018-12-15').scan({
     }
     console.info(rows)
 })
+
+// client
+// .table('DicomAttr')
+// .row('1.3.12.2.1107.5.2.32.35162.30000012020622041507900000157')
+// .get(['File:DicomFilePath','File:DicomFileName'], function (err, vals) {
+//     if (err) {
+//         console.log(err)
+//         return
+//     }
+//     var filePath = vals.find(function (val) {
+//         return val.column === 'File:DicomFilePath'
+//     })
+//     var fileName = vals.find(function (val) {
+//         return val.column === 'File:DicomFileName'
+//     })
+//     console.log(vals)
+// })
+
+
+// const scanner = client
+//     .table('DicomAttr')
+//     .scan({
+//         //   columns: 'Study:StudyInstanceUID',
+//         // filter: {
+//         //     type: 'FirstKeyOnlyFilter'
+//         // },
+//         maxVersions: 1
+//     })
+// const dicomlist = []
+// scanner.on('readable', function () {
+//     while (chunk = scanner.read()) {
+//         var dicomIndex = dicomlist.findIndex(function (dicom) {
+//             return dicom.UID === chunk.key
+//         })
+//         if (dicomIndex !== -1) {
+//             dicomlist[dicomIndex][chunk.column.split(':')[1]] = chunk.$
+//         } else {
+//             var dicom = {
+//                 UID: chunk.key
+//             }
+//             dicom[chunk.column.split(':')[1]] = chunk.$
+//             dicomlist.push(dicom)
+//         }
+//     }
+// })
+
+// scanner.on('error', function (err) {
+//     console.log(err)
+// })
+
+// scanner.on('end', function () {
+//     console.log(dicomlist)
+// })
+
+client
+.table( 'DicomAttr' )
+.regions(function(error, regions){
+  console.info(regions)
+});

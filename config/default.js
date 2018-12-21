@@ -7,12 +7,12 @@ module.exports = {
   },
   mongodb: 'mongodb://localhost:27017/web2d',
   hbase: {
-    host: 'master.msopopop.cn',
-    port: 60010
+    host: '106.14.188.106',
+    port: 8080
   },
   hdfs: {
     host: 'master.msopopop.cn',
     port: 50010
   },
-  hbase_remote: 'master.msopopop.cn:2181'
+  hbase_remote: 'slave.msopopop.cn:2181'
 }

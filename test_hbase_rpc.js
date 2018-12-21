@@ -2,7 +2,7 @@ const hbase = require("hbase-rpc-client")
 const config = require("config-lite")(__dirname)
 const should = require("should")
 client = hbase({
-    zookeeperHosts: ["master.msopopop.cn:2181"],
+    zookeeperHosts: ["slave.msopopop.cn:2181"],
     zookeeperRoot: "/hbase-1.0.0",
     zookeeperReconnectTimeout: 20000,
     rootRegionZKPath: "/meta-region-server",

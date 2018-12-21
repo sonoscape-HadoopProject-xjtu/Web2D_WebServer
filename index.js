@@ -2,12 +2,16 @@ const db = require('./utils/mongodb')
 const userModel = require('./models/user')
 const authCodeModel = require('./models/authorization_code')
 
+const hbase = require('hbase')
+
 const path = require('path')
 const express = require('express')
 const session = require('express-session')
 const config = require('config-lite')(__dirname)
 const querystring = require('querystring')
 const app = express()
+
+const hbaseClient = hbase(config.hbase)
 
 // 登录
 app.post('/api/user/login', function (req, res) {
@@ -30,7 +34,8 @@ app.post('/api/user/login', function (req, res) {
         if (userinfo) {
           res.send({
             status: 1,
-            message: '登录成功'
+            message: '登录成功',
+            id_token: userinfo
           })
         } else {
           res.send({
@@ -59,7 +64,7 @@ app.post('/api/user/signup', function (req, res) {
         if (authcode) {
           userModel.find({
             userid: body.userid
-          }, function (err,userinfo) {
+          }, function (err, userinfo) {
             if (err) {
               res.status(500)
             } else {
@@ -89,7 +94,7 @@ app.post('/api/user/signup', function (req, res) {
                         message: '用户创建失败'
                       })
                     }
-                  }      
+                  }
                 })
               }
             }
@@ -108,39 +113,69 @@ app.post('/api/user/signup', function (req, res) {
 // 用户表单获取
 app.get('/api/userlist', function (req, res) {
   // console.log(req.query)
-  var response = {
-    data: {}
-  }
-  userModel.find(function (err,users) {
-    if(err)
+  userModel.find(function (err, users) {
+    if (err)
       res.status(500)
     else {
-      response = users
       res.setHeader("Access-Control-Allow-Origin", "*");
-      res.end(JSON.stringify(response))
+      res.end(JSON.stringify(users))
     }
-  })  
+  })
 })
 // dicom表单获取
-app.get('/api/users', function (req, res) {
-  console.log(req.query)
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  var response = {
-    link: {
-
-    },
-    data: {
-      name: 'name',
-      email: 'email',
-      birthdate: 'birthdate',
-      address: {
-        line1: 'line1',
-        line2: 'line2',
-        zipcode: 'zipcode'
-      }
+app.get('/api/studylist', function (req, res) {
+  var dicomlist = []
+  hbaseClient.table('DicomAttr').scan({
+    maxVersions: 1
+  }, function (err, rows) {
+    if (err) {
+      console.log(err)
+      return
     }
-  }
-  res.end(JSON.stringify(response))
+    rows.forEach(chunk => {
+      var dicomIndex = dicomlist.findIndex(function (dicom) {
+        return dicom.UID === chunk.key
+      })
+      if (dicomIndex !== -1) {
+        dicomlist[dicomIndex][chunk.column.split(':')[1]] = chunk.$
+      } else {
+        var dicom = {
+          UID: chunk.key
+        }
+        dicom[chunk.column.split(':')[1]] = chunk.$
+        dicomlist.push(dicom)
+      }
+    })
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.end(JSON.stringify(dicomlist))
+  })
+})
+// Dicom 路径获取
+app.post('/api/studylist', function (req, res) {
+  var body = ''
+  req.on('data', function (chunk) {
+    body += chunk
+  })
+  req.on('end', function () {
+    console.log(body)
+    hbaseClient
+    .table('DicomAttr')
+    .row(body)
+    .get(['File:DicomFilePath','File:DicomFileName'], function (err, vals) {
+        if (err) {
+            console.log(err)
+            return
+        }
+        var filePath = vals.find(function (val) {
+            return val.column === 'File:DicomFilePath'
+        })
+        var fileName = vals.find(function (val) {
+            return val.column === 'File:DicomFileName'
+        })
+        console.log(filePath)
+        
+    })
+  })
 })
 // 监听端口，启动程序
 app.listen(config.port, function () {

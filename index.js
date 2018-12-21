@@ -77,7 +77,7 @@ app.post('/api/user/signup', function (req, res) {
                 userModel.create({
                   userid: body.userid,
                   userpassword: body.userpassword,
-                  username: body.userid,
+                  username: body.username,
                 }, function (err, userinfo) {
                   if (err) {
                     res.status(500)
@@ -125,7 +125,7 @@ app.get('/api/userlist', function (req, res) {
 // dicom表单获取
 app.get('/api/studylist', function (req, res) {
   var dicomlist = []
-  hbaseClient.table('DicomAttr').scan({
+  hbaseClient.table('DicomAttrTest').scan({
     maxVersions: 1
   }, function (err, rows) {
     if (err) {
@@ -159,7 +159,7 @@ app.post('/api/studylist', function (req, res) {
   req.on('end', function () {
     console.log(body)
     hbaseClient
-    .table('DicomAttr')
+    .table('DicomAttrTest')
     .row(body)
     .get(['File:DicomFilePath','File:DicomFileName'], function (err, vals) {
         if (err) {
@@ -173,7 +173,6 @@ app.post('/api/studylist', function (req, res) {
             return val.column === 'File:DicomFileName'
         })
         console.log(filePath)
-        
     })
   })
 })

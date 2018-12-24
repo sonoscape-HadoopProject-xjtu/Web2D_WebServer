@@ -12,25 +12,16 @@ const querystring = require('querystring')
 const app = express()
 
 const hbaseClient = hbase(config.hbase)
+
 // 设置头，解决跨域问题
 app.use(function (req, res, next) {
-
-  // Website you wish to allow to connect
   res.setHeader('Access-Control-Allow-Origin', '*');
-
-  // Request methods you wish to allow
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-
-  // Request headers you wish to allow
   res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-
-  // Set to true if you need the website to include cookies in the requests sent
-  // to the API (e.g. in case you use sessions)
   res.setHeader('Access-Control-Allow-Credentials', true);
-
-  // Pass to next layer of middleware
   next();
 });
+
 // 登录
 app.post('/api/user/login', function (req, res) {
   console.log('1')
@@ -39,7 +30,6 @@ app.post('/api/user/login', function (req, res) {
     body += chunk
   })
   req.on('end', function () {
-    // res.setHeader("Access-Control-Allow-Origin", "*");
 
     // 解析参数
     body = JSON.parse(body)
@@ -47,7 +37,7 @@ app.post('/api/user/login', function (req, res) {
 
     userModel.findOne({
       userid: body.userid,
-      userid: body.userpassword
+      userpassword: body.userpassword
     }, function (err, userinfo) {
       if (err) {
         res.status(500)
@@ -196,6 +186,64 @@ app.post('/api/studylist', function (req, res) {
     })
   })
 })
+// 删除用户
+app.post('/api/user/delete', function (req, res) {
+  var body = ''
+  req.on('data', function (chunk) {
+    body += chunk
+  })
+  req.on('end', function () {
+    userModel.deleteOne({
+      userid: body
+    }, function (err,msg) {
+      if (err) {
+        res.status(500)
+      } else {
+        if (msg.n === 1) {
+          res.send({
+            status: 1,
+            message: '删除用户成功！'
+          })
+        } else {
+          res.send({
+            status: 0,
+            message: '删除用户异常！'
+          })
+        }
+      }      
+    })
+  })
+})
+
+// 更新资料户
+app.post('/api/user/update', function (req, res) {
+  var body = ''
+  req.on('data', function (chunk) {
+    body += chunk
+  })
+  req.on('end', function () {
+    body = JSON.parse(body)
+    console.log(body)
+    userModel.updateOne({
+      userid: body.userid
+    }, {
+      $set: body
+    }, function (err) {
+      if (err) {
+        res.send({
+          status: 0,
+          message: '更新用户失败！'
+        })
+      } else {
+        res.send({
+          status: 1,
+          message: '更新用户成功！'
+        })
+      }      
+    })
+  })
+})
+
 // 监听端口，启动程序
 app.listen(config.port, function () {
   console.log(`listening on port ${config.port}`)

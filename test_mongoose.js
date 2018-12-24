@@ -14,13 +14,13 @@ const authCodeModel = require('./models/authorization_code')
 //         console.log(res)
 //     }
 // })
-userModel.find(function (err, res) {
-    if (err) {
-        console.log(err)
-    } else {
-        console.log(res)
-    }
-})
+// userModel.find(function (err, res) {
+//     if (err) {
+//         console.log(err)
+//     } else {
+//         console.log(res)
+//     }
+// })
 // authCodeModel.create({
 //     authorization_code: '769704987'
 // }, function (err) {
@@ -28,3 +28,9 @@ userModel.find(function (err, res) {
 //         console.log(err)
 //     }    
 // })
+userModel.deleteOne({
+    userid: 'doc'
+}, function (err,msg) {
+    console.log(err)
+    console.log(msg)
+})

@@ -44,13 +44,13 @@ app.post('/api/user/login', function (req, res) {
       } else {
         if (userinfo) {
 
-          res.send({
+          res.status(200).send({
             status: 1,
             message: '登录成功',
             id_token: userinfo
           })
         } else {
-          res.send({
+          res.status(200).send({
             status: 0,
             message: '用户名或密码错误'
           })
@@ -81,7 +81,7 @@ app.post('/api/user/signup', function (req, res) {
               res.status(500)
             } else {
               if (userinfo.length !== 0) {
-                res.send({
+                res.status(200).send({
                   status: 0,
                   message: '用户名已存在'
                 })
@@ -95,13 +95,13 @@ app.post('/api/user/signup', function (req, res) {
                     res.status(500)
                   } else {
                     if (userinfo) {
-                      res.send({
+                      res.status(200).send({
                         status: 1,
                         message: '用户创建成功',
                         id_token: userinfo
                       })
                     } else {
-                      res.send({
+                      res.status(200).send({
                         status: 0,
                         message: '用户创建失败'
                       })
@@ -112,7 +112,7 @@ app.post('/api/user/signup', function (req, res) {
             }
           })
         } else {
-          res.send({
+          res.status(200).send({
             status: 0,
             message: '认证码无效'
           })
@@ -128,8 +128,8 @@ app.get('/api/userlist', function (req, res) {
   userModel.find(function (err, users) {
     if (err)
       res.status(500)
-    else {      
-      res.end(JSON.stringify(users))
+    else {
+      res.status(200).send(JSON.stringify(users))
     }
   })
 })
@@ -200,12 +200,12 @@ app.post('/api/user/delete', function (req, res) {
         res.status(500)
       } else {
         if (msg.n === 1) {
-          res.send({
+          res.status(200).send({
             status: 1,
             message: '删除用户成功！'
           })
         } else {
-          res.send({
+          res.status(200).send({
             status: 0,
             message: '删除用户异常！'
           })
@@ -230,12 +230,12 @@ app.post('/api/user/update', function (req, res) {
       $set: body
     }, function (err) {
       if (err) {
-        res.send({
+        res.status(200).send({
           status: 0,
           message: '更新用户失败！'
         })
       } else {
-        res.send({
+        res.status(200).send({
           status: 1,
           message: '更新用户成功！'
         })

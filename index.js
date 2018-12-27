@@ -292,8 +292,12 @@ app.post('/api/savedraws', function (req, res) {
               status: 0,
               message: '保存失败！'
             })
+          } else {
+            res.status(200).send({
+              status: 1,
+              message: '保存成功！'
+            })
           }
-          return
         })
       } else {
         annotationModel.create(body, function (err) {

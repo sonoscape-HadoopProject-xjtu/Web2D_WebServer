@@ -14,5 +14,6 @@ module.exports = {
     host: 'master.msopopop.cn',
     port: 50010
   },
-  hbase_remote: 'slave.msopopop.cn:2181'
+  hbase_remote: 'slave.msopopop.cn:2181',
+  json_file_path: '/home/verizonwu/JSONFile'
 }

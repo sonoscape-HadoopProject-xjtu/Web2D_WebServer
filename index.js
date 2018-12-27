@@ -1,9 +1,10 @@
 const db = require('./utils/mongodb')
 const userModel = require('./models/user')
 const authCodeModel = require('./models/authorization_code')
+const annotationModel = require('./models/annotation')
 
 const hbase = require('hbase')
-
+const fs = require('fs')
 const path = require('path')
 const express = require('express')
 const session = require('express-session')
@@ -34,29 +35,33 @@ app.post('/api/user/login', function (req, res) {
     // 解析参数
     body = JSON.parse(body)
     console.log(body.userid)
-
-    userModel.findOne({
-      userid: body.userid,
-      userpassword: body.userpassword
-    }, function (err, userinfo) {
-      if (err) {
-        res.status(500)
-      } else {
-        if (userinfo) {
-
-          res.status(200).send({
-            status: 1,
-            message: '登录成功',
-            id_token: userinfo
-          })
+    console.log(db.readyState)
+    if (db.readyState !== 1) {
+      res.status(500).send()
+    } else {
+      userModel.findOne({
+        userid: body.userid,
+        userpassword: body.userpassword
+      }, function (err, userinfo) {
+        if (err) {
+          res.status(500).send()
         } else {
-          res.status(200).send({
-            status: 0,
-            message: '用户名或密码错误'
-          })
+          if (userinfo) {
+  
+            res.status(200).send({
+              status: 1,
+              message: '登录成功',
+              id_token: userinfo
+            })
+          } else {
+            res.status(200).send({
+              status: 0,
+              message: '用户名或密码错误'
+            })
+          }
         }
-      }
-    })
+      })
+    }    
   })
 })
 // 注册
@@ -67,71 +72,78 @@ app.post('/api/user/signup', function (req, res) {
   })
   req.on('end', function () {
     body = JSON.parse(body)
-    authCodeModel.findOne({
-      authorization_code: body.authorization_code
-    }, function (err, authcode) {
-      if (err) {
-        res.status(500)
-      } else {
-        if (authcode) {
-          userModel.find({
-            userid: body.userid
-          }, function (err, userinfo) {
-            if (err) {
-              res.status(500)
-            } else {
-              if (userinfo.length !== 0) {
-                res.status(200).send({
-                  status: 0,
-                  message: '用户名已存在'
-                })
-              } else {
-                userModel.create({
-                  userid: body.userid,
-                  userpassword: body.userpassword,
-                  username: body.username,
-                }, function (err, userinfo) {
-                  if (err) {
-                    res.status(500)
-                  } else {
-                    if (userinfo) {
-                      res.status(200).send({
-                        status: 1,
-                        message: '用户创建成功',
-                        id_token: userinfo
-                      })
-                    } else {
-                      res.status(200).send({
-                        status: 0,
-                        message: '用户创建失败'
-                      })
-                    }
-                  }
-                })
-              }
-            }
-          })
+    if (db.readyState !== 1) {
+      res.status(500).send()
+    } else {
+      authCodeModel.findOne({
+        authorization_code: body.authorization_code
+      }, function (err, authcode) {
+        if (err) {
+          res.status(500).send()
         } else {
-          res.status(200).send({
-            status: 0,
-            message: '认证码无效'
-          })
+          if (authcode) {
+            userModel.find({
+              userid: body.userid
+            }, function (err, userinfo) {
+              if (err) {
+                res.status(500).send()
+              } else {
+                if (userinfo.length !== 0) {
+                  res.status(200).send({
+                    status: 0,
+                    message: '用户名已存在'
+                  })
+                } else {
+                  userModel.create({
+                    userid: body.userid,
+                    userpassword: body.userpassword,
+                    username: body.username,
+                  }, function (err, userinfo) {
+                    if (err) {
+                      res.status(500).send()
+                    } else {
+                      if (userinfo) {
+                        res.status(200).send({
+                          status: 1,
+                          message: '用户创建成功',
+                          id_token: userinfo
+                        })
+                      } else {
+                        res.status(200).send({
+                          status: 0,
+                          message: '用户创建失败'
+                        })
+                      }
+                    }
+                  })
+                }
+              }
+            })
+          } else {
+            res.status(200).send({
+              status: 0,
+              message: '认证码无效'
+            })
+          }
         }
-      }
-    })
-
+      })
+    }
   })
 })
 // 用户表单获取
 app.get('/api/userlist', function (req, res) {
   // console.log(req.query)
-  userModel.find(function (err, users) {
-    if (err)
-      res.status(500)
-    else {
-      res.status(200).send(JSON.stringify(users))
-    }
-  })
+  if (db.readyState !== 1) {
+    res.status(500).send()
+  } else {
+    userModel.find(function (err, users) {
+      if (err)
+        res.status(500).send()
+      else {
+        res.status(200).send(JSON.stringify(users))
+      }
+    })
+  }
 })
 // dicom表单获取
 app.get('/api/studylist', function (req, res) {
@@ -156,8 +168,8 @@ app.get('/api/studylist', function (req, res) {
         dicom[chunk.column.split(':')[1]] = chunk.$
         dicomlist.push(dicom)
       }
-    })    
-    res.end(JSON.stringify(dicomlist))
+    })
+    res.status(200).send(JSON.stringify(dicomlist))
   })
 })
 // Dicom 路径获取
@@ -182,7 +194,6 @@ app.post('/api/studylist', function (req, res) {
         var fileName = vals.find(function (val) {
             return val.column === 'File:DicomFileName'
         })
-        console.log(filePath)
     })
   })
 })
@@ -193,30 +204,66 @@ app.post('/api/user/delete', function (req, res) {
     body += chunk
   })
   req.on('end', function () {
-    userModel.deleteOne({
-      userid: body
-    }, function (err,msg) {
-      if (err) {
-        res.status(500)
-      } else {
-        if (msg.n === 1) {
-          res.status(200).send({
-            status: 1,
-            message: '删除用户成功！'
-          })
+    if (db.readyState !== 1) {
+      res.status(500).send()
+    } else {
+      userModel.deleteOne({
+        userid: body
+      }, function (err,msg) {
+        if (err) {
+          res.status(500).send()
         } else {
-          res.status(200).send({
-            status: 0,
-            message: '删除用户异常！'
-          })
-        }
-      }      
-    })
+          if (msg.n === 1) {
+            res.status(200).send({
+              status: 1,
+              message: '删除用户成功！'
+            })
+          } else {
+            res.status(200).send({
+              status: 0,
+              message: '删除用户异常！'
+            })
+          }
+        }      
+      })
+    }
   })
 })
 
-// 更新资料户
+// 更新用户资料
 app.post('/api/user/update', function (req, res) {
+  var body = ''
+  req.on('data', function (chunk) {
+    body += chunk
+  })
+  req.on('end', function () {
+    if (db.readyState !== 1) {
+      res.status(500).send()
+    } else {
+      body = JSON.parse(body)
+      userModel.updateOne({
+        userid: body.userid
+      }, {
+        $set: body
+      }, function (err) {
+        if (err) {
+          res.status(200).send({
+            status: 0,
+            message: '更新用户失败！'
+          })
+        } else {
+          res.status(200).send({
+            status: 1,
+            message: '更新用户成功！'
+          })
+        }      
+      })
+    }
+  })
+})
+
+// 保存标注
+app.post('/api/savedraws', function (req, res) {
   var body = ''
   req.on('data', function (chunk) {
     body += chunk
@@ -224,22 +271,77 @@ app.post('/api/user/update', function (req, res) {
   req.on('end', function () {
     body = JSON.parse(body)
     console.log(body)
-    userModel.updateOne({
-      userid: body.userid
-    }, {
-      $set: body
-    }, function (err) {
+    annotationModel.findOne({
+      ReferencedStudyInstanceUID: body.ReferencedStudyInstanceUID
+    }, function (err, item) {
       if (err) {
         res.status(200).send({
           status: 0,
-          message: '更新用户失败！'
+          message: '保存失败！'
+        })
+        return
+      }
+      if (item) {
+        annotationModel.updateOne({
+          ReferencedStudyInstanceUID: body.ReferencedStudyInstanceUID
+        }, {
+          $set: body
+        }, function (err) {
+          if (err) {
+            res.status(200).send({
+              status: 0,
+              message: '保存失败！'
+            })
+          }
+          return
         })
       } else {
-        res.status(200).send({
-          status: 1,
-          message: '更新用户成功！'
+        annotationModel.create(body, function (err) {
+          if (err) {
+            res.status(200).send({
+              status: 0,
+              message: '保存失败！'
+            })
+          } else {
+            res.status(200).send({
+              status: 1,
+              message: '保存成功！'
+            })
+          }          
         })
-      }      
+      }
+    })    
+  })
+})
+
+// 获取标注
+app.post('/api/getdraws', function (req, res) {
+  var body = ''
+  req.on('data', function (chunk) {
+    body += chunk
+  })
+  req.on('end', function () {
+    annotationModel.findOne({
+      ReferencedStudyInstanceUID: body
+    }, function (err, item) {
+      if (err) {
+        res.status(200).send({
+          status: 0,
+          message: '获取失败！'
+        })
+      } else {
+        if (item) {
+          res.status(200).send({
+            status: 1,
+            item
+          })
+        } else {
+          res.status(200).send({
+            status: 0,
+            message: '不存在历史标注！'
+          })
+        }
+      }
     })
   })
 })

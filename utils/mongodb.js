@@ -22,7 +22,11 @@ db.on('error', function (error) {
   console.error(
     chalk.red('Error in MongoDb connection: ' + error)
   )
-  mongoose.disconnect()
+  mongoose.connect(config.mongodb, {
+    server: {
+      auto_reconnect: true
+    }
+  })
 })
 
 db.on('close', function () {

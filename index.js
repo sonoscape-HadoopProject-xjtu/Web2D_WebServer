@@ -270,49 +270,49 @@ app.post('/api/savedraws', function (req, res) {
   })
   req.on('end', function () {
     body = JSON.parse(body)
-    console.log(body)
+    // console.log(body)
     annotationModel.findOne({
       ReferencedStudyInstanceUID: body.ReferencedStudyInstanceUID
     }, function (err, item) {
       if (err) {
         res.status(200).send({
           status: 0,
-          message: '保存失败！'
-        })
-        return
-      }
-      if (item) {
-        annotationModel.updateOne({
-          ReferencedStudyInstanceUID: body.ReferencedStudyInstanceUID
-        }, {
-          $set: body
-        }, function (err) {
-          if (err) {
-            res.status(200).send({
-              status: 0,
-              message: '保存失败！'
-            })
-          } else {
-            res.status(200).send({
-              status: 1,
-              message: '保存成功！'
-            })
-          }
+          message: err
         })
       } else {
-        annotationModel.create(body, function (err) {
-          if (err) {
-            res.status(200).send({
-              status: 0,
-              message: '保存失败！'
-            })
-          } else {
-            res.status(200).send({
-              status: 1,
-              message: '保存成功！'
-            })
-          }          
-        })
+        if (item) {
+          annotationModel.updateOne({
+            ReferencedStudyInstanceUID: body.ReferencedStudyInstanceUID
+          }, {
+            $set: body
+          }, function (err) {
+            if (err) {
+              res.status(200).send({
+                status: 0,
+                message: err
+              })
+            } else {
+              res.status(200).send({
+                status: 1,
+                message: '保存成功！'
+              })
+            }
+          })
+        } else {
+          annotationModel.create(body, function (err) {
+            if (err) {
+              res.status(200).send({
+                status: 0,
+                message: err
+              })
+            } else {
+              res.status(200).send({
+                status: 1,
+                message: '保存成功！'
+              })
+            }          
+          })
+        }
       }
     })    
   })
@@ -331,12 +331,13 @@ app.post('/api/getdraws', function (req, res) {
       if (err) {
         res.status(200).send({
           status: 0,
-          message: '获取失败！'
+          message: '载入失败！'
         })
       } else {
         if (item) {
           res.status(200).send({
             status: 1,
+            message: '载入成功！',
             item
           })
         } else {

@@ -271,50 +271,54 @@ app.post('/api/savedraws', function (req, res) {
   req.on('end', function () {
     body = JSON.parse(body)
     // console.log(body)
-    annotationModel.findOne({
-      ReferencedStudyInstanceUID: body.ReferencedStudyInstanceUID
-    }, function (err, item) {
-      if (err) {
-        res.status(200).send({
-          status: 0,
-          message: err
-        })
-      } else {
-        if (item) {
-          annotationModel.updateOne({
-            ReferencedStudyInstanceUID: body.ReferencedStudyInstanceUID
-          }, {
-            $set: body
-          }, function (err) {
-            if (err) {
-              res.status(200).send({
-                status: 0,
-                message: err
-              })
-            } else {
-              res.status(200).send({
-                status: 1,
-                message: '保存成功！'
-              })
-            }
+    if (db.readyState !== 1) {
+      res.status(500).send()
+    } else {
+      annotationModel.findOne({
+        ReferencedStudyInstanceUID: body.ReferencedStudyInstanceUID
+      }, function (err, item) {
+        if (err) {
+          res.status(200).send({
+            status: 0,
+            message: err
           })
         } else {
-          annotationModel.create(body, function (err) {
-            if (err) {
-              res.status(200).send({
-                status: 0,
-                message: err
-              })
-            } else {
-              res.status(200).send({
-                status: 1,
-                message: '保存成功！'
-              })
-            }          
-          })
+          if (item) {
+            annotationModel.updateOne({
+              ReferencedStudyInstanceUID: body.ReferencedStudyInstanceUID
+            }, {
+              $set: body
+            }, function (err) {
+              if (err) {
+                res.status(200).send({
+                  status: 0,
+                  message: err
+                })
+              } else {
+                res.status(200).send({
+                  status: 1,
+                  message: '保存成功！'
+                })
+              }
+            })
+          } else {
+            annotationModel.create(body, function (err) {
+              if (err) {
+                res.status(200).send({
+                  status: 0,
+                  message: err
+                })
+              } else {
+                res.status(200).send({
+                  status: 1,
+                  message: '保存成功！'
+                })
+              }          
+            })
+          }
         }
-      }
-    })    
+      })   
+    } 
   })
 })
 
@@ -325,29 +329,33 @@ app.post('/api/getdraws', function (req, res) {
     body += chunk
   })
   req.on('end', function () {
-    annotationModel.findOne({
-      ReferencedStudyInstanceUID: body
-    }, function (err, item) {
-      if (err) {
-        res.status(200).send({
-          status: 0,
-          message: '载入失败！'
-        })
-      } else {
-        if (item) {
-          res.status(200).send({
-            status: 1,
-            message: '载入成功！',
-            item
-          })
-        } else {
+    if (db.readyState !== 1) {
+      res.status(500).send()
+    } else {
+      annotationModel.findOne({
+        ReferencedStudyInstanceUID: body
+      }, function (err, item) {
+        if (err) {
           res.status(200).send({
             status: 0,
-            message: '不存在历史标注！'
+            message: '载入失败！'
           })
+        } else {
+          if (item) {
+            res.status(200).send({
+              status: 1,
+              message: '载入成功！',
+              item
+            })
+          } else {
+            res.status(200).send({
+              status: 0,
+              message: '不存在历史标注！'
+            })
+          }
         }
-      }
-    })
+      })
+    }
   })
 })
 

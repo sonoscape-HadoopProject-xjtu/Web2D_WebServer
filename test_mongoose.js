@@ -1,19 +1,9 @@
 const db = require('./utils/mongodb')
 const userModel = require('./models/user')
 const authCodeModel = require('./models/authorization_code')
+const chalk = require('chalk')
 
 
-// userModel.create({
-//     userid: 'vrz',
-//     userpassword: '123',
-//     usergroup: 'administrator'
-// }, function (err, res) {
-//     if (err) {
-//         console.log(err)
-//     } else {
-//         console.log(res)
-//     }
-// })
 // userModel.find(function (err, res) {
 //     if (err) {
 //         console.log(err)

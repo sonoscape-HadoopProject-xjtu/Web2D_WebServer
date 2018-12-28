@@ -148,28 +148,32 @@ app.get('/api/userlist', function (req, res) {
 // dicom表单获取
 app.get('/api/studylist', function (req, res) {
   var dicomlist = []
-  hbaseClient.table('DicomAttrTest').scan({
+  console.log('getting')  
+  hbaseClient.table(config.TABLE_NAME).scan({
     maxVersions: 1
   }, function (err, rows) {
     if (err) {
       console.log(err)
-      return
-    }
-    rows.forEach(chunk => {
-      var dicomIndex = dicomlist.findIndex(function (dicom) {
-        return dicom.UID === chunk.key
-      })
-      if (dicomIndex !== -1) {
-        dicomlist[dicomIndex][chunk.column.split(':')[1]] = chunk.$
-      } else {
-        var dicom = {
-          UID: chunk.key
+      res.status(500).send()
+    } else {
+      console.log(rows)
+      rows.forEach(chunk => {
+        var dicomIndex = dicomlist.findIndex(function (dicom) {
+          return dicom.UID === chunk.key
+        })
+        if (dicomIndex !== -1) {
+          dicomlist[dicomIndex][chunk.column.split(':')[1]] = chunk.$
+        } else {
+          var dicom = {
+            UID: chunk.key
+          }
+          dicom[chunk.column.split(':')[1]] = chunk.$
+          dicomlist.push(dicom)
         }
-        dicom[chunk.column.split(':')[1]] = chunk.$
-        dicomlist.push(dicom)
-      }
-    })
-    res.status(200).send(JSON.stringify(dicomlist))
+      })
+      console.log(dicomlist)
+      res.status(200).send(JSON.stringify(dicomlist))
+    }
   })
 })
 // Dicom 路径获取
@@ -181,7 +185,7 @@ app.post('/api/studylist', function (req, res) {
   req.on('end', function () {
     console.log(body)
     hbaseClient
-    .table('DicomAttrTest')
+    .table(config.TABLE_NAME)
     .row(body)
     .get(['File:DicomFilePath','File:DicomFileName'], function (err, vals) {
         if (err) {

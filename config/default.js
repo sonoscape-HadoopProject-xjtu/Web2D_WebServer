@@ -5,6 +5,7 @@ module.exports = {
     host: '106.14.188.106',
     port: 8080
   },
+  TABLE_NAME: 'DicomAttrTest',
   hbase_remote: 'slave.msopopop.cn:2181',
   json_file_path: '/home/verizonwu/JSONFile'
 }

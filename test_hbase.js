@@ -6,13 +6,15 @@ var client = hbase({
     host: '106.14.188.106',
     port: 8080
 });
-client.table('DicomAttr').scan({
+client.table('DicomAttrTest').scan({
     maxVersions: 1
 }, function (err, rows) {
     if (err) {
+        console.log('err')
         console.log(err)
         return
     }
+    console.info('rows')
     console.info(rows)
 })
 
@@ -70,7 +72,14 @@ client.table('DicomAttr').scan({
 // })
 
 client
-.table( 'DicomAttr' )
+.table( 'DicomAttrTest' )
 .regions(function(error, regions){
-  console.info(regions)
+    if (error) {
+        console.info('error2')
+        console.info(error)
+    } else {
+        console.info('regions')
+        console.info(regions)
+    }
+
 });
